@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 热点雷达站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='none' stroke='%2300ff9d' stroke-width='6'/><circle cx='50' cy='50' r='12' fill='%2300ff9d'/></svg>">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-glyph">◉</span>
+    <div class="brand-text">
+      <h1>AI 热点雷达站</h1>
+      <span class="brand-sub">HOT SIGNAL DETECTION · v0.1</span>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="signals">信号流</button>
+    <button class="tab" data-tab="hotspots">热点榜</button>
+    <button class="tab" data-tab="keywords">监控词</button>
+    <button class="tab" data-tab="settings">设置</button>
+  </nav>
+  <div class="topbar-status" id="sysStatus"></div>
+</header>
+
+<main class="layout">
+
+  <!-- ============ 左栏：雷达 + 状态 ============ -->
+  <aside class="side">
+    <section class="panel radar-panel">
+      <div class="panel-title"><span class="dot dot-live" id="liveDot"></span>扫描态势 <span class="panel-tag" id="scanTag">STANDBY</span></div>
+      <div class="radar" id="radar">
+        <div class="radar-sweep"></div>
+        <div class="radar-cross"></div>
+        <div id="radarBlips"></div>
+        <div class="radar-core"></div>
+      </div>
+      <div class="radar-legend" id="radarLegend"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">调度队列</div>
+      <div class="schedule-list" id="scheduleList"><div class="empty">等待数据…</div></div>
+    </section>
+
+    <section class="panel" id="alertPanel" hidden>
+      <div class="panel-title panel-title-warn">⚠ 系统提醒</div>
+      <div id="alertList"></div>
+    </section>
+  </aside>
+
+  <!-- ============ 右栏：内容区 ============ -->
+  <section class="content">
+
+    <!-- 信号流 -->
+    <div class="tabpane active" id="pane-signals">
+      <div class="pane-head">
+        <h2>捕获信号</h2>
+        <div class="pane-head-actions">
+          <label class="chk"><input type="checkbox" id="showSuspect"> 显示疑似信号</label>
+          <span class="count-chip" id="signalCount">0</span>
+        </div>
+      </div>
+      <div class="signal-stream" id="signalStream">
+        <div class="empty-state">
+          <div class="empty-glyph">⌖</div>
+          <p>雷达正在扫描，尚未捕获确认信号</p>
+          <p class="empty-hint">添加监控词后，系统将自动搜索并经 AI 判定真伪后推送到这里</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 热点榜 -->
+    <div class="tabpane" id="pane-hotspots">
+      <div class="pane-head">
+        <h2>领域热点榜</h2>
+        <button class="btn btn-ghost" id="btnRefreshHotspots">↻ 刷新</button>
+      </div>
+      <div id="hotspotAreas"></div>
+    </div>
+
+    <!-- 监控词 -->
+    <div class="tabpane" id="pane-keywords">
+      <div class="pane-head"><h2>监控词管理</h2></div>
+
+      <form class="panel kw-form" id="kwForm">
+        <div class="field">
+          <label>关键词 / 领域</label>
+          <input type="text" id="kwWord" placeholder="如：GPT-5、Claude、AI 编程" maxlength="50" required>
+        </div>
+        <div class="field">
+          <label>类型</label>
+          <select id="kwKind">
+            <option value="monitor">监控词 —— 精准盯梢，AI 验真后通知</option>
+            <option value="domain">领域词 —— 定时聚合该领域热点榜</option>
+          </select>
+        </div>
+        <div class="field field-sm">
+          <label>间隔(分)</label>
+          <input type="number" id="kwInterval" min="5" max="1440" value="30">
+        </div>
+        <button class="btn btn-primary" type="submit">＋ 加入雷达</button>
+      </form>
+
+      <div class="kw-list" id="kwList"></div>
+    </div>
+
+    <!-- 设置 -->
+    <div class="tabpane" id="pane-settings">
+      <div class="pane-head"><h2>雷达站设置</h2></div>
+
+      <form class="panel settings-form" id="settingsForm">
+        <div class="settings-grid">
+          <div class="settings-block">
+            <h3>🤖 AI 判定</h3>
+            <div class="field">
+              <label>OpenRouter 模型</label>
+              <input type="text" name="aiModel" placeholder="openai/gpt-5-nano">
+              <p class="hint" id="orKeyHint"></p>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>确认阈值(≥通知)</label><input type="number" name="confidenceThreshold" min="50" max="100"></div>
+              <div class="field"><label>疑似阈值(≥入库)</label><input type="number" name="suspectThreshold" min="30" max="95"></div>
+            </div>
+          </div>
+
+          <div class="settings-block">
+            <h3>⏱ 扫描节奏</h3>
+            <div class="field-row">
+              <div class="field"><label>默认监控间隔(分)</label><input type="number" name="keywordIntervalMin" min="5" max="1440"></div>
+              <div class="field"><label>热点聚合间隔(分)</label><input type="number" name="hotspotIntervalMin" min="10" max="1440"></div>
+            </div>
+            <div class="field"><label>回溯窗口(小时)</label><input type="number" name="searchWindowHours" min="1" max="168"></div>
+            <div class="field-row">
+              <label class="chk"><input type="checkbox" name="providerFirecrawl" value="1"> Firecrawl 搜索</label>
+              <label class="chk"><input type="checkbox" name="providerHackernews" value="1"> Hacker News</label>
+            </div>
+          </div>
+
+          <div class="settings-block settings-block-wide">
+            <h3>📮 邮件通知 (SMTP)</h3>
+            <div class="field-row">
+              <div class="field"><label>SMTP 服务器</label><input type="text" name="mailHost" placeholder="smtp.qq.com"></div>
+              <div class="field field-sm"><label>端口</label><input type="number" name="mailPort" placeholder="465"></div>
+              <label class="chk chk-mid"><input type="checkbox" name="mailSecure" value="1"> SSL</label>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>账号</label><input type="text" name="mailUser" placeholder="you@qq.com"></div>
+              <div class="field"><label>授权码/密码</label><input type="password" name="mailPass" placeholder="••••••"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>发件人</label><input type="text" name="mailFrom" placeholder="雷达站 <you@qq.com>"></div>
+              <div class="field"><label>收件人</label><input type="text" name="mailTo" placeholder="you@qq.com"></div>
+            </div>
+            <div class="field-row field-row-end">
+              <label class="chk"><input type="checkbox" name="mailEnabled" value="1"> 启用邮件通知</label>
+              <button class="btn btn-ghost" type="button" id="btnTestMail">发送测试邮件</button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button class="btn btn-primary" type="submit">保存设置</button>
+          <span class="save-hint" id="saveHint"></span>
+        </div>
+      </form>
+    </div>
+
+  </section>
+</main>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
