@@ -1,0 +1,78 @@
+@import "tailwindcss";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
+@theme inline {
+  /* ── 雷达站设计系统：Developer Tool · OLED 黑 · Real-Time Monitor ── */
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", monospace;
+  --font-sans: "JetBrains Mono", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+
+  --color-void: #030304;
+  --color-panel: #0a0a0c;
+  --color-edge: rgba(255, 255, 255, 0.08);
+  --color-signal: #00e68a;
+  --color-signal-dim: #00b36b;
+  --color-heat: #ffb224;
+  --color-critical: #ff4d6a;
+  --color-domain: #5eb1ff;
+  --color-ink: #e8ecec;
+  --color-ink-dim: #8a9490;
+  --color-ink-faint: #525b57;
+
+  /* Aceternity Spotlight（官方 keyframes） */
+  --animate-spotlight: spotlight 2s ease 0.75s 1 forwards;
+  --animate-marquee: marquee var(--marquee-duration, 40s) linear infinite;
+  --animate-marquee-vertical: marquee-vertical var(--marquee-duration, 40s) linear infinite;
+  --animate-ping-signal: ping-signal 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-radar-sweep: radar-sweep 4.2s linear infinite;
+
+  @keyframes spotlight {
+    0% { opacity: 0; transform: translate(-72%, -62%) scale(0.5); }
+    100% { opacity: 1; transform: translate(-50%, -40%) scale(1); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes marquee-vertical {
+    from { transform: translateY(0); }
+    to { transform: translateY(-50%); }
+  }
+  @keyframes ping-signal {
+    0% { transform: scale(0.6); opacity: 0.9; }
+    80%, 100% { transform: scale(2.6); opacity: 0; }
+  }
+  @keyframes radar-sweep {
+    to { transform: rotate(360deg); }
+  }
+}
+
+/* 细网格底纹（Aceternity 标志性背景，纯 CSS 零开销） */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* 雷达扫描锥（conic-gradient，GPU 合成） */
+.radar-sweep {
+  background: conic-gradient(
+    from 0deg,
+    rgba(0, 230, 138, 0.32),
+    rgba(0, 230, 138, 0.07) 52deg,
+    transparent 68deg
+  );
+  animation: radar-sweep 4.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep,
+  [class*="animate-"] {
+    animation: none !important;
+  }
+}
+
+::selection { background: rgba(0, 230, 138, 0.25); }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.14) transparent; }

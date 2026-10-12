@@ -161,5 +161,5 @@ test('getSettings 默认值完整性', () => {
   const s = getSettings();
   assert.equal(s.confidenceThreshold, 75);
   assert.equal(s.suspectThreshold, 60);
-  assert.equal(s.aiModel, 'openai/gpt-5-nano');
+  assert.equal(s.aiModel, 'deepseek/deepseek-chat-v3.1'); // OpenAI/Gemini 系区域 403，默认用 DeepSeek
 });

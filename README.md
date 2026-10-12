@@ -6,10 +6,19 @@
 
 ```bash
 npm install
+npm run build      # 构建前端（Vite + React + Tailwind v4 + Aceternity UI）
 # 配置 .env（见下方）
 npm start          # 打开 http://localhost:3742
 npm test           # 运行测试（16 个用例）
+npm run dev:web    # 前端热更新开发（代理 /api → 3742）
 ```
+
+## 前端设计（v0.2）
+
+- **设计语言**：Developer Tool · OLED 纯黑 + 荧光信号绿 · JetBrains Mono 全等宽 · 瑞士网格密度
+- **组件库**：[Aceternity UI](https://ui.aceternity.com)（Spotlight 氛围 / Infinite Moving Cards 快讯跑马灯 / Bento Grid 热点榜 / Animated List 信号流入场）+ Tailwind CSS v4
+- **情绪表达**：新确认信号以弹簧动画置顶 + 辉光标记 + 标题未读闪烁 —— 第一时间看到有价值的内容；AI 宁可不报，不推垃圾
+- **性能守护**：字体自托管零外部请求、动效纯 CSS 合成、`prefers-reduced-motion` 全局降级、构建产物 gzip ~156KB
 
 ## 配置（.env）
 

@@ -3,3 +3,5 @@ node_modules/
 data/
 *.log
 .zcode/
+dist/
+components.json.backup

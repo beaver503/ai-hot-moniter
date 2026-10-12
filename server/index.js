@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'node:path';
+import fs from 'node:fs';
 import { config, ROOT } from './config.js';
 import { api } from './routes/api.js';
 import { rescheduleAll, stopAll, nextSchedules } from './scheduler.js';
@@ -11,11 +12,12 @@ app.disable('x-powered-by');
 app.use(express.json({ limit: '200kb' }));
 
 app.use('/api', api);
-app.use(express.static(path.join(ROOT, 'public'), { index: 'index.html' }));
 
-// SPA 兜底
+// 前端：优先 Vite 构建产物 dist/，退回旧版 public/
+const webDir = fs.existsSync(path.join(ROOT, 'dist')) ? 'dist' : 'public';
+app.use(express.static(path.join(ROOT, webDir), { index: 'index.html' }));
 app.get(/^\/(?!api\/).*/, (req, res) => {
-  res.sendFile(path.join(ROOT, 'public', 'index.html'));
+  res.sendFile(path.join(ROOT, webDir, 'index.html'));
 });
 
 // 统一错误处理
