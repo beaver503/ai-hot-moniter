@@ -2,35 +2,84 @@
 
 > AI 编程博主的私人热点情报站：关键词精准监控 + 领域热点聚合，AI 判别真伪，第一时间通知。
 
-## 快速开始
+Express + 原生 `node:sqlite` 后端，React 19 + Vite + Tailwind v4 + Aceternity UI 前端，单机零运维部署。
+
+## 一、环境要求
+
+| 依赖 | 版本 | 说明 |
+|---|---|---|
+| Node.js | **≥ 22.5** | 数据库用原生 `node:sqlite`（本机 24.x 验证通过），**无需安装 better-sqlite3** |
+| npm | 随 Node 附带 | — |
+
+查看版本：`node -v`
+
+## 二、快速启动（3 步）
 
 ```bash
+# 1. 安装依赖
 npm install
-npm run build      # 构建前端（Vite + React + Tailwind v4 + Aceternity UI）
-# 配置 .env（见下方）
-npm start          # 打开 http://localhost:3742
-npm test           # 运行测试（16 个用例）
-npm run dev:web    # 前端热更新开发（代理 /api → 3742）
+
+# 2. 配置环境变量（必填 OpenRouter Key）
+cp .env.example .env
+#    编辑 .env，填入 OPENROUTER_API_KEY（https://openrouter.ai/keys 免费申请）
+
+# 3. 构建前端并启动
+npm run build
+npm start
 ```
 
-## 前端设计（v0.2）
+启动后打开 **http://localhost:3742**，看到启动横幅和雷达扫描页面即成功：
 
-- **设计语言**：Developer Tool · OLED 纯黑 + 荧光信号绿 · JetBrains Mono 全等宽 · 瑞士网格密度
-- **组件库**：[Aceternity UI](https://ui.aceternity.com)（Spotlight 氛围 / Infinite Moving Cards 快讯跑马灯 / Bento Grid 热点榜 / Animated List 信号流入场）+ Tailwind CSS v4
-- **情绪表达**：新确认信号以弹簧动画置顶 + 辉光标记 + 标题未读闪烁 —— 第一时间看到有价值的内容；AI 宁可不报，不推垃圾
-- **性能守护**：字体自托管零外部请求、动效纯 CSS 合成、`prefers-reduced-motion` 全局降级、构建产物 gzip ~156KB
+```
+┌─────────────────────────────────────────────┐
+│        ◉ AI 热点雷达站 已启动               │
+│                                             │
+│   地址     http://localhost:3742            │
+│   OpenRouter  ✓ 已配置                      │
+│   Firecrawl  ✓ 已配置                       │
+│   扫描间隔   监控词 30 分钟 / 热点 60 分钟    │
+└─────────────────────────────────────────────┘
+```
 
-## 配置（.env）
+顶栏状态徽章应显示 AI / 搜索 / 邮件三项配置状态。添加一个监控词（如 GPT-5）后 15~40 秒内开始首轮扫描。
 
-| 变量 | 说明 |
+## 三、启动方式一览
+
+| 命令 | 用途 | 说明 |
+|---|---|---|
+| `npm start` | **生产运行** | 后端直接托管 `dist/` 构建产物，访问 :3742 |
+| `npm run dev` | 后端开发 | `node --watch` 监听重启，改后端代码自动生效 |
+| `npm run dev:web` | 前端开发 | Vite 热更新 :5173，`/api` 自动代理到 :3742（需另开一个终端跑 `npm run dev` 或 `npm start`） |
+| `npm run build` | 构建前端 | 产物输出到 `dist/`，`npm start` 优先托管它，无则退回旧版 `public/` |
+| `npm test` | 运行测试 | `node --test`，16 个用例（AI 判定 / 去重 / 流水线） |
+
+典型前端开发流程：终端 A 跑 `npm run dev`，终端 B 跑 `npm run dev:web`，浏览器开 http://localhost:5173。
+
+## 四、配置说明
+
+### 环境变量（.env）
+
+| 变量 | 必填 | 说明 |
+|---|---|---|
+| `OPENROUTER_API_KEY` | **必填** | AI 真伪判定与热点聚合用，[openrouter.ai/keys](https://openrouter.ai/keys) 免费申请。未配置时扫描暂停，页面红色提示，**绝不发未验证通知** |
+| `FIRECRAWL_API_KEY` | 可选 | 网页搜索数据源；不配则仅用免费的 Hacker News。积分耗尽自动降级仅 HN |
+| `PORT` | 可选 | 服务端口，默认 **3742** |
+
+### 邮件通知（网页内配置）
+
+不在 .env 里配，进入网页「**设置**」页填 SMTP（推荐 QQ 邮箱：`smtp.qq.com` + 授权码），有「发送测试邮件」按钮。邮件失败不影响站内信号流。
+
+## 五、常见问题排查
+
+| 现象 | 原因与处理 |
 |---|---|
-| `OPENROUTER_API_KEY` | **必填**。到 [openrouter.ai/keys](https://openrouter.ai/keys) 免费申请，用于 AI 真伪判定与热点聚合 |
-| `FIRECRAWL_API_KEY` | 可选。网页搜索数据源（无则仅用免费的 Hacker News） |
-| `PORT` | 服务端口，默认 3742 |
+| 启动报 `node:sqlite` 不存在 | Node 版本 < 22.5，升级 Node |
+| 页面打不开 | 端口被占用：换 `PORT=xxxx` 后重启，或释放 3742 |
+| 首页白屏 / 样式丢失 | 未执行 `npm run build`（服务回退到了旧版 `public/`），构建后重启 |
+| 扫描一直暂停 | 未配置 `OPENROUTER_API_KEY`，按启动横幅提示补填后重启 |
+| 想清空全部数据 | 删除 `data/radar.db`（SQLite 单文件，WAL 模式），重启即重置 |
 
-邮件通知在网页「设置」页配置 SMTP（推荐 QQ 邮箱：`smtp.qq.com` + 授权码），有测试邮件按钮。
-
-## 两个核心能力
+## 六、核心能力
 
 **1. 关键词监控（monitor）**
 每 N 分钟搜索（Firecrawl + HN 双源）→ URL/标题双通道去重 → OpenRouter AI 逐条判定真伪（过滤标题党/蹭热度/传闻/旧闻）→ 按置信度分级：
@@ -41,29 +90,22 @@ npm run dev:web    # 前端热更新开发（代理 /api → 3742）
 **2. 领域热点榜（domain）**
 定时聚合领域词（如"AI 编程"）近 24h 内容 → AI 按事件聚类、打热度分、生成中文标题摘要 → 热点榜快照（保留历史）。
 
-## 降级策略
+## 七、目录结构
 
-- 未配置 OpenRouter Key：扫描暂停，页面红色提示（**绝不发未验证通知**）
-- Firecrawl 积分耗尽：自动降级仅 HN，页面提示
-- 邮件失败：不影响站内信号流
+```
+server/          后端（Express + node:sqlite）
+  ├─ index.js        入口：静态托管 + API + 调度器
+  ├─ scheduler.js    监控词/热点定时扫描
+  ├─ providers/      搜索数据源（Firecrawl / HN）
+  ├─ routes/api.js   REST API
+  └─ notify/         邮件（SMTP）+ SSE 实时推送
+src/             前端（React 19 + Tailwind v4 + Aceternity UI）
+dist/            前端构建产物（npm run build 生成，npm start 托管）
+data/            radar.db SQLite 数据文件
+skill/           ai-hot-radar Agent Skill 封装
+test/            node:test 用例
+```
 
-## 数据
+## 八、Agent Skill
 
-SQLite 单文件 `data/radar.db`（WAL 模式，零运维）。删除该文件即重置。
-
-## 验收清单（网页版 v0.1）
-
-- [ ] `npm start` 后打开 http://localhost:3742，雷达扫描动画正常，深色指挥中心风格
-- [ ] 顶栏状态徽章正确反映 AI/搜索/邮件配置状态
-- [ ] 「监控词」添加关键词（如 GPT-5），列表出现卡片，15~40 秒后开始首轮扫描
-- [ ] ⚡ 立即扫描按钮触发扫描，调度队列倒计时刷新
-- [ ] 配置 OpenRouter Key 后：扫描产生信号卡片（标题/AI 真实度进度条/中文摘要/来源）
-- [ ] 信号页新信号实时推送（无需刷新页面），标题栏出现未读计数
-- [ ] 添加领域词（如 AI 编程），数分钟后热点榜出现带热度条的中文热点列表
-- [ ] 「设置」页可改模型/阈值/间隔，保存后调度重排；SMTP 配置后测试邮件能收到
-- [ ] 浏览器窗口缩窄到手机宽度，布局自动切换单列，无溢出
-- [ ] `npm test` 全绿（16 个用例）
-
-## Agent Skill（第二阶段）
-
-网页版验收后，`skill/` 目录将封装为可安装的 Agent Skill，让任意 AI 助手具备"发现热点/注册监控"能力。
+`skill/ai-hot-radar` 已封装为 Agent Skill，让任意 AI 助手具备"发现热点 / 注册监控"能力（一次性热点发现 discover + 持久监控 monitor，联动本雷达站服务）。
